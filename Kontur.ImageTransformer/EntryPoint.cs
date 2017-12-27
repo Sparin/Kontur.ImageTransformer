@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Kontur.ImageTransformer.Middlewares;
+using System;
 
 namespace Kontur.ImageTransformer
 {
@@ -8,6 +9,7 @@ namespace Kontur.ImageTransformer
         {
             using (var server = new AsyncHttpServer())
             {
+                server.AddMiddleware(new ImageProcessingMiddleware());
                 server.Start("http://+:8080/");
 
                 Console.ReadKey(true);

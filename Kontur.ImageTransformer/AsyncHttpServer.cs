@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Kontur.ImageTransformer.Middlewares;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -12,7 +14,7 @@ namespace Kontur.ImageTransformer
         {
             listener = new HttpListener();
         }
-        
+
         public void Start(string prefix)
         {
             lock (listener)
@@ -29,7 +31,7 @@ namespace Kontur.ImageTransformer
                         Priority = ThreadPriority.Highest
                     };
                     listenerThread.Start();
-                    
+
                     isRunning = true;
                 }
             }
@@ -46,7 +48,7 @@ namespace Kontur.ImageTransformer
 
                 listenerThread.Abort();
                 listenerThread.Join();
-                
+
                 isRunning = false;
             }
         }
@@ -62,7 +64,7 @@ namespace Kontur.ImageTransformer
 
             listener.Close();
         }
-        
+
         private void Listen()
         {
             while (true)
@@ -87,13 +89,22 @@ namespace Kontur.ImageTransformer
             }
         }
 
+        public void AddMiddleware(Middleware middleware)
+        {
+            if (pipeline.Count != 0)
+                pipeline[pipeline.Count - 1].NextMiddleware = middleware;
+
+            pipeline.Add(middleware);
+        }
+
         private async Task HandleContextAsync(HttpListenerContext listenerContext)
         {
             // TODO: implement request handling
 
-            listenerContext.Response.StatusCode = (int)HttpStatusCode.OK;
-            using (var writer = new StreamWriter(listenerContext.Response.OutputStream))
-                writer.WriteLine("Hello, world!");
+            if (pipeline.Count != 0)
+                await pipeline[0].Handle(listenerContext);
+
+            listenerContext.Response.Close();
         }
 
         private readonly HttpListener listener;
@@ -101,5 +112,6 @@ namespace Kontur.ImageTransformer
         private Thread listenerThread;
         private bool disposed;
         private volatile bool isRunning;
+        private List<Middleware> pipeline = new List<Middleware>();
     }
 }
