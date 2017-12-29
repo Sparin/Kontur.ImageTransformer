@@ -21,7 +21,6 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
         public override async Task<HttpListenerContext> Handle(HttpListenerContext context)
         {
             var parts = GetUriParts(context.Request.RawUrl).ToArray();
-            var route = GetRoute(parts);
             var keys = routes.Keys.Where(x => Regex.IsMatch(context.Request.RawUrl, x)).ToArray();
 
             foreach (var key in keys)
