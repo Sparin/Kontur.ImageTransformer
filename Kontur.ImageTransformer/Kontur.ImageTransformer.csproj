@@ -47,9 +47,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\Controller.cs" />
+    <Compile Include="Controllers\HealthController.cs" />
     <Compile Include="EntryPoint.cs" />
     <Compile Include="Middlewares\ImageProcessingMiddleware.cs" />
     <Compile Include="Middlewares\Middleware.cs" />
+    <Compile Include="Middlewares\Routing\Enums\UriPartType.cs" />
+    <Compile Include="Middlewares\Routing\Models\UriPart.cs" />
+    <Compile Include="Middlewares\Routing\RoutingMiddleware.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AsyncHttpServer.cs" />
   </ItemGroup>
@@ -57,5 +62,6 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

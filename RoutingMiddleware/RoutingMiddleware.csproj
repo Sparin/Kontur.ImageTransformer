@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Kontur.ImageTransformer.Middlewares.Routing</RootNamespace>
+    <AssemblyName>Kontur.ImageTransformer</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kontur.ImageTransformer\Kontur.ImageTransformer.csproj" />
+  </ItemGroup>
+
+</Project>
