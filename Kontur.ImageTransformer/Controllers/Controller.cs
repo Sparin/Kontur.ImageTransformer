@@ -9,6 +9,6 @@ namespace Kontur.ImageTransformer.Controllers
 {
     public abstract class Controller
     {
-        public HttpListenerContext Context { get; private set; }
+        public HttpListenerContext Context { get; /*private set;*/ }
     }
 }

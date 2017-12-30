@@ -12,8 +12,8 @@ namespace Kontur.ImageTransformer
             using (var server = new AsyncHttpServer())
             {
                 RoutingMiddleware routing = new RoutingMiddleware();
-                routing.AddRoute<HealthController>("/health/<value>")
-                    .AddRoute<Controller>("");
+                routing.AddRoute<HealthController>("health");
+                routing.AddRoute<HealthController>("/health/<value>");
 
                 server.AddMiddleware(routing);
                 //server.AddMiddleware(new ImageProcessingMiddleware());
