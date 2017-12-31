@@ -16,7 +16,7 @@ namespace Kontur.ImageTransformer.Middlewares
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         private int maxRequests = 0;
-        internal int MaxRequests
+        public int MaxRequests
         {
             get { return maxRequests; }
             private set
@@ -37,14 +37,14 @@ namespace Kontur.ImageTransformer.Middlewares
         private SemaphoreSlim semaphore;
         private ConcurrentQueue<HttpListenerContext> processingQueue = new ConcurrentQueue<HttpListenerContext>();
 
-        internal ImageProcessingMiddleware()
+        public ImageProcessingMiddleware()
         {
             int maxPortThreads = 0;
             ThreadPool.GetMaxThreads(out maxRequests, out maxPortThreads);
             semaphore = new SemaphoreSlim(MaxRequests, MaxRequests);
         }
 
-        internal override async Task<HttpListenerContext> Handle(HttpListenerContext context)
+        public override async Task<HttpListenerContext> Handle(HttpListenerContext context)
         {
             semaphore.Wait();
 

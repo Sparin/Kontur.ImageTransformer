@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -101,8 +102,17 @@ namespace Kontur.ImageTransformer
         {
             // TODO: implement request handling
 
-            if (pipeline.Count != 0)
-                await pipeline[0].Handle(listenerContext);
+            try
+            {
+                if (pipeline.Count != 0)
+                    await pipeline[0].Handle(listenerContext);
+            }
+            catch (Exception ex)
+            {
+                listenerContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                byte[] buffer = Encoding.Default.GetBytes($"{ex.Message}\r\n{ex.StackTrace}");
+                listenerContext.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
 
             listenerContext.Response.Close();
         }

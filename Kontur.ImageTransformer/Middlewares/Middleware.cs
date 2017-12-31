@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Kontur.ImageTransformer.Middlewares
 {
-    internal abstract class Middleware
+    public abstract class Middleware
     {
         internal Middleware NextMiddleware = null;
 
@@ -20,7 +20,7 @@ namespace Kontur.ImageTransformer.Middlewares
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        internal virtual async Task<HttpListenerContext> Handle(HttpListenerContext context)
+        public virtual async Task<HttpListenerContext> Handle(HttpListenerContext context)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             context.Response.StatusCode = (int)HttpStatusCode.NotImplemented;
