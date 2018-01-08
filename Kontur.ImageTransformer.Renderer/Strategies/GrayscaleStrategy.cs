@@ -12,45 +12,41 @@ namespace Kontur.ImageTransformer.Renderer.Strategies
     public class GrayscaleStrategy : IRenderStrategy
     {
         public PixelFormat PixelFormat { get; } = PixelFormat.Format32bppArgb;
-        public Rectangle CroppingArea { get; set; }
 
-        BitmapData imageData;
-
-        public async Task<Bitmap> Process(Bitmap bitmap)
+        public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea)
         {
-            return await Process(bitmap, new CancellationToken());
+            return await Process(bitmap, croppingArea, new CancellationToken());
         }
 
-        public async Task<Bitmap> Process(Bitmap bitmap, CancellationToken cancellationToken)
+        public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea, CancellationToken cancellationToken)
         {
             return await Task.Run(() =>
-            {
-                Bitmap resultBitmap = bitmap.Clone(CroppingArea, PixelFormat);
-                int bytesPerPixel = Image.GetPixelFormatSize(PixelFormat) / 8;
-                int length = bytesPerPixel * CroppingArea.Width * CroppingArea.Height;
-
-                imageData = resultBitmap.LockBits(CroppingArea, ImageLockMode.ReadWrite, PixelFormat);
-                unsafe
                 {
-                    byte* dataPointer = (byte*)imageData.Scan0.ToPointer();
+                    Bitmap resultBitmap = bitmap.Clone(croppingArea, PixelFormat);
+                    int bytesPerPixel = Image.GetPixelFormatSize(PixelFormat) / 8;
+                    int length = bytesPerPixel * croppingArea.Width * croppingArea.Height;
 
-                    for (int i = 0; i < length; i += bytesPerPixel)
+                    BitmapData imageData = resultBitmap.LockBits(new Rectangle(0, 0, resultBitmap.Width, resultBitmap.Height), ImageLockMode.ReadWrite, PixelFormat);
+                    unsafe
                     {
-                        dataPointer[i] = dataPointer[i];
-                        //byte b = dataPointer[i], g = dataPointer[i + 1], r = dataPointer[i + 2], a = dataPointer[i + 3];
-                        byte intensity = (byte)((dataPointer[i + 0] + dataPointer[i + 1] + dataPointer[i + 2]) / 3);
-                        dataPointer[i] = intensity;
-                        dataPointer[i + 1] = intensity;
-                        dataPointer[i + 2] = intensity;
+                        byte* dataPointer = (byte*)imageData.Scan0.ToPointer();
 
-                        cancellationToken.ThrowIfCancellationRequested();
+                        for (int i = 0; i < length; i += bytesPerPixel)
+                        {
+                            byte intensity = (byte)((dataPointer[i + 0] + dataPointer[i + 1] + dataPointer[i + 2]) / 3);
+
+                            dataPointer[i] = intensity;
+                            dataPointer[i + 1] = intensity;
+                            dataPointer[i + 2] = intensity;
+
+                            cancellationToken.ThrowIfCancellationRequested();
+                        }
                     }
-                }
 
-                resultBitmap.UnlockBits(imageData);
+                    resultBitmap.UnlockBits(imageData);
 
-                return resultBitmap;
-            });
+                    return resultBitmap;
+                });
         }
     }
 }

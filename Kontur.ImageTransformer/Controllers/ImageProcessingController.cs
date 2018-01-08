@@ -8,46 +8,96 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Kontur.ImageTransformer.Controllers
 {
     public class ImageProcessingController : Controller
     {
-        // TODO: Implement checks of arguments and other logic
+        private static GrayscaleStrategy GrayscaleStrategy = new GrayscaleStrategy();
+        private static SepiaStrategy SepiaStrategy = new SepiaStrategy();
+        
         public void Post(string filter, string coords)
         {
-            //Context.Response.StatusCode = (int)HttpStatusCode.Found;
+            try
+            {
+                if (Context.Request.ContentLength64 > 102400)
+                {
+                    Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return;
+                }
 
-            Renderer.Renderer renderer = new Renderer.Renderer();
-            //if(Context.Request.InputStream. != Context.Request.ContentLength64)
-            //{
-            //    Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            //    return;
-            //}
-            Bitmap bodyBitmap = new Bitmap(Context.Request.InputStream);
+                Renderer.Renderer renderer = new Renderer.Renderer();
+                Bitmap bodyBitmap = new Bitmap(Context.Request.InputStream);
+                Rectangle cropArea = ConvertToRectangle(coords);
+                cropArea.Intersect(new Rectangle(0, 0, bodyBitmap.Width, bodyBitmap.Height));
+                if (cropArea.Width == 0 || cropArea.Height == 0)
+                {
+                    Context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                    return;
+                }
+
+                IRenderStrategy filterStrategy = GetFilter(filter);
+
+                bodyBitmap = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    bodyBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
+                }
+                    
+            }
+            catch (ArgumentException)
+            {
+                Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+        }
+
+        private static Rectangle ConvertToRectangle(string coords)
+        {
+            if (!Regex.IsMatch(coords, @"\A([-\d]*,{1}){3}[-\d]*\z"))
+                throw new ArgumentException("Incorrect value", "coords");
+
+            int[] args = coords.Split(',')
+                .Select(x => Convert.ToInt32(x))
+                .ToArray();
+
+            return new Rectangle(args[0], args[1], args[2], args[3]);
+        }
+
+        private static IRenderStrategy GetFilter(string filter)
+        {
             IRenderStrategy filterStrategy = null;
+
             switch (filter)
             {
                 case "grayscale":
-                    filterStrategy = new GrayscaleStrategy() { CroppingArea = new Rectangle(0, 0, 312, 212) };
+                    filterStrategy = GrayscaleStrategy;
                     break;
+
+                case "sepia":
+                    filterStrategy = SepiaStrategy;
+                    break;
+
                 default:
-                    Context.Response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                    return;
+                    if (Regex.IsMatch(filter, @"threshold\(\d{1,3}\)"))
+                    {
+                        var threshold = Convert.ToInt32(Regex.Match(filter, @"\d{1,3}").Value);
+                        filterStrategy = new ThresholdStrategy(threshold);
+                    }
+                    else
+                        throw new ArgumentException("Filter is not found");
+                    break;
             }
 
-            if (filterStrategy != null)
-            {
-
-                bodyBitmap = renderer.RenderBitmap(bodyBitmap, filterStrategy).Result;
-                //bodyBitmap.Save(@"H:\Desktop\image.png");
-                    bodyBitmap.Save(Context.Response.OutputStream, System.Drawing.Imaging.ImageFormat.Png);
-            }
-            else
-            {
-                byte[] buffer = Encoding.Default.GetBytes($"Filter: {filter}\r\nCoords: {coords}\r\n");
-                Context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
+            return filterStrategy;
         }
     }
 }

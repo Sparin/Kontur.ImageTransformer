@@ -7,9 +7,9 @@ namespace Kontur.ImageTransformer.Renderer
 {
     public class Renderer
     {
-        public async Task<Bitmap> RenderBitmap(Bitmap bitmap, IRenderStrategy strategy)
+        public async Task<Bitmap> RenderBitmap(Bitmap bitmap, Rectangle croppingArea, IRenderStrategy strategy)
         {
-            return await strategy.Process(bitmap);
+            return await strategy.Process(bitmap, croppingArea);
         }
     }
 }

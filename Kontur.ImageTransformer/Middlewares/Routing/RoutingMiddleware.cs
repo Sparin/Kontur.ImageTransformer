@@ -15,7 +15,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
 {
     public class RoutingMiddleware : Middleware
     {
-        internal const string UriPartsPattern = @"<{0,1}[\w\d\-%._~]{1,}>{0,1}";
+        internal const string UriPartsPattern = @"<{0,1}[\w\d\-%.(),_~]{1,}>{0,1}";
 
         Dictionary<string, Type> routes = new Dictionary<string, Type>();
         Dictionary<string, UriPart[]> contracts = new Dictionary<string, UriPart[]>();
@@ -29,8 +29,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             foreach (var key in keys)
             {
                 var controllerType = routes[key];
-
-                //TODO: Implement transfer of control on initiated controller
+                
                 var controller = Activator.CreateInstance(controllerType);
                 var contextField = typeof(Controller).GetField("<Context>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
                 contextField.SetValue(controller, context);
@@ -42,8 +41,8 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
                     continue;
                 method.Invoke(controller, GetParameters(method, context.Request.RawUrl, contracts[key]));
 
-                byte[] buffer = Encoding.Default.GetBytes(controllerType.FullName + "\r\n" + context.Request.RawUrl);
-                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                //byte[] buffer = Encoding.Default.GetBytes(controllerType.FullName + "\r\n" + context.Request.RawUrl);
+                //context.Response.OutputStream.Write(buffer, 0, buffer.Length);
             }
 
             if (keys.Length == 0 || notFound)

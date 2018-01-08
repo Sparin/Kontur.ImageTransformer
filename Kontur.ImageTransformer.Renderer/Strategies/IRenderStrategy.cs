@@ -12,9 +12,8 @@ namespace Kontur.ImageTransformer.Renderer.Strategies
     public interface IRenderStrategy
     {
         PixelFormat PixelFormat { get; }
-        Rectangle CroppingArea { set; }
 
-        Task<Bitmap> Process(Bitmap bitmap);
-        Task<Bitmap> Process(Bitmap bitmap, CancellationToken cancellationToken);
+        Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea);
+        Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea, CancellationToken cancellationToken);
     }
 }
