@@ -1,4 +1,5 @@
-﻿using Kontur.ImageTransformer.Middlewares;
+﻿using Amib.Threading;
+using Kontur.ImageTransformer.Middlewares;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +12,14 @@ namespace Kontur.ImageTransformer
 {
     internal class AsyncHttpServer : IDisposable
     {
+        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25 });
+        private readonly HttpListener listener;
+
+        private Thread listenerThread;
+        private bool disposed;
+        private volatile bool isRunning;
+        private List<Middleware> pipeline = new List<Middleware>();
+
         public AsyncHttpServer()
         {
             listener = new HttpListener();
@@ -75,9 +84,8 @@ namespace Kontur.ImageTransformer
                     if (listener.IsListening)
                     {
                         var context = listener.GetContext();
-                        Task.Run(() => HandleContextAsync(context));
+                        threadPool.QueueWorkItem(new WorkItemInfo() { Timeout = 1000 }, HandleContextAsync, context);
                     }
-                    else Thread.Sleep(0);
                 }
                 catch (ThreadAbortException)
                 {
@@ -98,30 +106,26 @@ namespace Kontur.ImageTransformer
             pipeline.Add(middleware);
         }
 
-        private async Task HandleContextAsync(HttpListenerContext listenerContext)
+        private object HandleContextAsync(object listenerContext)
         {
             // TODO: implement request handling
-
+            var context = (HttpListenerContext)listenerContext;
             try
             {
-                if (pipeline.Count != 0)
-                    await pipeline[0].Handle(listenerContext);
+                if (SmartThreadPool.IsWorkItemCanceled)
+                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                else if (pipeline.Count != 0)
+                    pipeline[0].Handle(context).Wait();
             }
             catch (Exception ex)
             {
-                listenerContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 byte[] buffer = Encoding.Default.GetBytes($"{ex.Message}\r\n{ex.StackTrace}");
-                listenerContext.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
             }
 
-            listenerContext.Response.Close();
+            context.Response.Close();
+            return null;
         }
-
-        private readonly HttpListener listener;
-
-        private Thread listenerThread;
-        private bool disposed;
-        private volatile bool isRunning;
-        private List<Middleware> pipeline = new List<Middleware>();
     }
 }

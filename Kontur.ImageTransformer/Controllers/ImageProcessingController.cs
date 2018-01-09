@@ -20,6 +20,7 @@ namespace Kontur.ImageTransformer.Controllers
         public void Post(string filter, string coords)
         {
             Bitmap bodyBitmap = null;
+            Bitmap result = null;
             try
             {
                 if (Context.Request.ContentLength64 > 102400)
@@ -40,11 +41,11 @@ namespace Kontur.ImageTransformer.Controllers
 
                 IRenderStrategy filterStrategy = GetFilter(filter);
 
-                bodyBitmap = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
-                
+                result = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
+
                 using (MemoryStream stream = new MemoryStream())
                 {
-                    bodyBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    result.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                     Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
                 }
             }
@@ -61,6 +62,8 @@ namespace Kontur.ImageTransformer.Controllers
             {
                 if (bodyBitmap != null)
                     bodyBitmap.Dispose();
+                if (result != null)
+                    result.Dispose();
             }
 
         }
