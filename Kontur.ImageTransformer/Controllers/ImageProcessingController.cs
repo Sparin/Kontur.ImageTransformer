@@ -16,9 +16,10 @@ namespace Kontur.ImageTransformer.Controllers
     {
         private static GrayscaleStrategy GrayscaleStrategy = new GrayscaleStrategy();
         private static SepiaStrategy SepiaStrategy = new SepiaStrategy();
-        
+
         public void Post(string filter, string coords)
         {
+            Bitmap bodyBitmap = null;
             try
             {
                 if (Context.Request.ContentLength64 > 102400)
@@ -28,7 +29,7 @@ namespace Kontur.ImageTransformer.Controllers
                 }
 
                 Renderer.Renderer renderer = new Renderer.Renderer();
-                Bitmap bodyBitmap = new Bitmap(Context.Request.InputStream);
+                bodyBitmap = new Bitmap(Context.Request.InputStream);
                 Rectangle cropArea = ConvertToRectangle(coords);
                 cropArea.Intersect(new Rectangle(0, 0, bodyBitmap.Width, bodyBitmap.Height));
                 if (cropArea.Width == 0 || cropArea.Height == 0)
@@ -40,13 +41,12 @@ namespace Kontur.ImageTransformer.Controllers
                 IRenderStrategy filterStrategy = GetFilter(filter);
 
                 bodyBitmap = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
-
+                
                 using (MemoryStream stream = new MemoryStream())
                 {
                     bodyBitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                     Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
                 }
-                    
             }
             catch (ArgumentException)
             {
@@ -56,6 +56,11 @@ namespace Kontur.ImageTransformer.Controllers
             catch (Exception)
             {
                 throw;
+            }
+            finally
+            {
+                if (bodyBitmap != null)
+                    bodyBitmap.Dispose();
             }
 
         }
