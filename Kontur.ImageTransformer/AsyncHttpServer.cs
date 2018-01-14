@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Amib.Threading;
+using Kontur.ImageTransformer.Middlewares;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,11 +12,19 @@ namespace Kontur.ImageTransformer
 {
     internal class AsyncHttpServer : IDisposable
     {
+        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25, MaxQueueLength = 100 });
+        private readonly HttpListener listener;
+
+        private Thread listenerThread;
+        private bool disposed;
+        private volatile bool isRunning;
+        private List<Middleware> pipeline = new List<Middleware>();
+
         public AsyncHttpServer()
         {
             listener = new HttpListener();
         }
-        
+
         public void Start(string prefix)
         {
             lock (listener)
@@ -29,7 +41,7 @@ namespace Kontur.ImageTransformer
                         Priority = ThreadPriority.Highest
                     };
                     listenerThread.Start();
-                    
+
                     isRunning = true;
                 }
             }
@@ -46,7 +58,7 @@ namespace Kontur.ImageTransformer
 
                 listenerThread.Abort();
                 listenerThread.Join();
-                
+
                 isRunning = false;
             }
         }
@@ -62,7 +74,7 @@ namespace Kontur.ImageTransformer
 
             listener.Close();
         }
-        
+
         private void Listen()
         {
             while (true)
@@ -72,9 +84,14 @@ namespace Kontur.ImageTransformer
                     if (listener.IsListening)
                     {
                         var context = listener.GetContext();
-                        Task.Run(() => HandleContextAsync(context));
+                        if (threadPool.MaxQueueLength == threadPool.CurrentWorkItemsCount)
+                        {
+                            context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                            context.Response.Close();
+                        }
+                        else
+                            threadPool.QueueWorkItem(new WorkItemInfo() { Timeout = 1000 }, HandleContextAsync, context);
                     }
-                    else Thread.Sleep(0);
                 }
                 catch (ThreadAbortException)
                 {
@@ -87,19 +104,34 @@ namespace Kontur.ImageTransformer
             }
         }
 
-        private async Task HandleContextAsync(HttpListenerContext listenerContext)
+        public void AddMiddleware(Middleware middleware)
         {
-            // TODO: implement request handling
+            if (pipeline.Count != 0)
+                pipeline[pipeline.Count - 1].NextMiddleware = middleware;
 
-            listenerContext.Response.StatusCode = (int)HttpStatusCode.OK;
-            using (var writer = new StreamWriter(listenerContext.Response.OutputStream))
-                writer.WriteLine("Hello, world!");
+            pipeline.Add(middleware);
         }
 
-        private readonly HttpListener listener;
+        private object HandleContextAsync(object listenerContext)
+        {
+            // TODO: implement request handling
+            var context = (HttpListenerContext)listenerContext;
+            try
+            {
+                if (pipeline.Count != 0)
+                    pipeline[0].Handle(context).Wait();
+                else
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                byte[] buffer = Encoding.Default.GetBytes($"{ex.Message}\r\n{ex.StackTrace}");
+                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
 
-        private Thread listenerThread;
-        private bool disposed;
-        private volatile bool isRunning;
+            context.Response.Close();
+            return null;
+        }
     }
 }

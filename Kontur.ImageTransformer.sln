@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.ImageTransformer", "Kontur.ImageTransformer\Kontur.ImageTransformer.csproj", "{9801585B-D1AA-4078-B9C4-7B7F8883E55E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.ImageTransformer.Renderer", "Kontur.ImageTransformer.Renderer\Kontur.ImageTransformer.Renderer.csproj", "{625D7C11-99AF-4BF7-8328-404BFDCA175B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9801585B-D1AA-4078-B9C4-7B7F8883E55E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9801585B-D1AA-4078-B9C4-7B7F8883E55E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9801585B-D1AA-4078-B9C4-7B7F8883E55E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
