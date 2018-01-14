@@ -14,6 +14,8 @@ namespace Kontur.ImageTransformer.Controllers
 {
     public class ImageProcessingController : Controller
     {
+        public static readonly byte[] PngSignature = { 137, 80, 78, 71, 13, 10, 26, 10 };
+
         private static GrayscaleStrategy GrayscaleStrategy = new GrayscaleStrategy();
         private static SepiaStrategy SepiaStrategy = new SepiaStrategy();
 
@@ -21,16 +23,29 @@ namespace Kontur.ImageTransformer.Controllers
         {
             Bitmap bodyBitmap = null;
             Bitmap result = null;
+            MemoryStream stream = null;
             try
             {
+
                 if (Context.Request.ContentLength64 > 102400)
                 {
                     Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     return;
                 }
+                byte[] file = new byte[Context.Request.ContentLength64];
+
+                Context.Request.InputStream.Read(file, 0, 8);
+                for (int i = 0; i < 8; i++)
+                    if (file[i] != PngSignature[i])
+                    {
+                        Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        return;
+                    }
+                Context.Request.InputStream.Read(file, 8, (int)Context.Request.ContentLength64 - 8);
+                stream = new MemoryStream(file);
 
                 Renderer.Renderer renderer = new Renderer.Renderer();
-                bodyBitmap = new Bitmap(Context.Request.InputStream);
+                bodyBitmap = new Bitmap(stream);
                 Rectangle cropArea = ConvertToRectangle(coords);
                 cropArea.Intersect(new Rectangle(0, 0, bodyBitmap.Width, bodyBitmap.Height));
                 if (cropArea.Width == 0 || cropArea.Height == 0)
@@ -43,11 +58,10 @@ namespace Kontur.ImageTransformer.Controllers
 
                 result = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
 
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    result.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                    Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
-                }
+                stream.Dispose(); stream = new MemoryStream();
+                result.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
+
             }
             catch (ArgumentException)
             {
@@ -64,6 +78,8 @@ namespace Kontur.ImageTransformer.Controllers
                     bodyBitmap.Dispose();
                 if (result != null)
                     result.Dispose();
+                if (stream != null)
+                    stream.Dispose();
             }
 
         }

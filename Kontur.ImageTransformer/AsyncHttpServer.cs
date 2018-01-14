@@ -12,7 +12,7 @@ namespace Kontur.ImageTransformer
 {
     internal class AsyncHttpServer : IDisposable
     {
-        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25 });
+        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25, MaxQueueLength = 100 });
         private readonly HttpListener listener;
 
         private Thread listenerThread;
@@ -84,7 +84,13 @@ namespace Kontur.ImageTransformer
                     if (listener.IsListening)
                     {
                         var context = listener.GetContext();
-                        threadPool.QueueWorkItem(new WorkItemInfo() { Timeout = 1000 }, HandleContextAsync, context);
+                        if (threadPool.MaxQueueLength == threadPool.CurrentWorkItemsCount)
+                        {
+                            context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                            context.Response.Close();
+                        }
+                        else
+                            threadPool.QueueWorkItem(new WorkItemInfo() { Timeout = 1000 }, HandleContextAsync, context);
                     }
                 }
                 catch (ThreadAbortException)
@@ -112,10 +118,10 @@ namespace Kontur.ImageTransformer
             var context = (HttpListenerContext)listenerContext;
             try
             {
-                if (SmartThreadPool.IsWorkItemCanceled)
-                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                else if (pipeline.Count != 0)
+                if (pipeline.Count != 0)
                     pipeline[0].Handle(context).Wait();
+                else
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             }
             catch (Exception ex)
             {
