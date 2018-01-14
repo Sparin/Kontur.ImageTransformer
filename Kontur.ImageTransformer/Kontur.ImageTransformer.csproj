@@ -55,7 +55,6 @@
     <Compile Include="Controllers\HealthController.cs" />
     <Compile Include="Controllers\ImageProcessingController.cs" />
     <Compile Include="EntryPoint.cs" />
-    <Compile Include="Middlewares\ImageProcessingMiddleware.cs" />
     <Compile Include="Middlewares\Middleware.cs" />
     <Compile Include="Middlewares\Routing\Enums\UriPartType.cs" />
     <Compile Include="Middlewares\Routing\Models\UriPart.cs" />
@@ -64,7 +63,9 @@
     <Compile Include="AsyncHttpServer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

@@ -1,5 +1,6 @@
 ﻿using Amib.Threading;
 using Kontur.ImageTransformer.Middlewares;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,8 @@ namespace Kontur.ImageTransformer
 {
     internal class AsyncHttpServer : IDisposable
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25, MaxQueueLength = 100 });
         private readonly HttpListener listener;
 
@@ -97,10 +100,6 @@ namespace Kontur.ImageTransformer
                 {
                     return;
                 }
-                catch (Exception error)
-                {
-                    // TODO: log errors
-                }
             }
         }
 
@@ -114,8 +113,8 @@ namespace Kontur.ImageTransformer
 
         private object HandleContextAsync(object listenerContext)
         {
-            // TODO: implement request handling
             var context = (HttpListenerContext)listenerContext;
+            logger.Info($"#{context.Request.RequestTraceIdentifier} {context.Request.HttpMethod} {context.Request.Url} received from {context.Request.LocalEndPoint}");
             try
             {
                 if (pipeline.Count != 0)
@@ -126,10 +125,14 @@ namespace Kontur.ImageTransformer
             catch (Exception ex)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                logger.Error(ex, "Unexpected error occurred");
+#if DEBUG
                 byte[] buffer = Encoding.Default.GetBytes($"{ex.Message}\r\n{ex.StackTrace}");
                 context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+#endif
             }
 
+            logger.Info($"#{context.Request.RequestTraceIdentifier} {context.Request.HttpMethod} {context.Request.Url} responsed with code {context.Response.StatusCode}");
             context.Response.Close();
             return null;
         }
