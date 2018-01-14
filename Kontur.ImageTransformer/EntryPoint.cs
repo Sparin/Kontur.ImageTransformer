@@ -14,6 +14,7 @@ namespace Kontur.ImageTransformer
                 RoutingMiddleware routing = new RoutingMiddleware();
                 routing.AddRoute<HealthController>("health");
                 routing.AddRoute<HealthController>("/health/<value>");
+                routing.AddRoute<ImageProcessingController>("process/<filter>/<coords>");
 
                 server.AddMiddleware(routing);
                 //server.AddMiddleware(new ImageProcessingMiddleware());
