@@ -1,0 +1,4 @@
+﻿{
+  "BaseAddress": "http://localhost:8080",
+  "RequestTimeout": 30
+}

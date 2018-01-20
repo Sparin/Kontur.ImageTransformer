@@ -63,6 +63,11 @@ namespace Kontur.ImageTransformer.Controllers
                 Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
 
             }
+            catch (OverflowException e) when (e.Message == "Value was either too large or too small for an Int32.")
+            {
+                Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
             catch (ArgumentException)
             {
                 Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
