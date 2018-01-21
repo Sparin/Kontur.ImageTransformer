@@ -114,7 +114,7 @@ namespace Kontur.ImageTransformer
         private object HandleContextAsync(object listenerContext)
         {
             var context = (HttpListenerContext)listenerContext;
-            logger.Info($"#{context.Request.RequestTraceIdentifier} {context.Request.HttpMethod} {context.Request.Url} received from {context.Request.LocalEndPoint}");
+            logger.Info($"#{context.Request.RequestTraceIdentifier} {context.Request.HttpMethod} {context.Request.Url} received from {context.Request.RemoteEndPoint}");
             try
             {
                 if (pipeline.Count != 0)
