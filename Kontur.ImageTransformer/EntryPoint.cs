@@ -18,9 +18,9 @@ namespace Kontur.ImageTransformer
                 server = new AsyncHttpServer();
 
                 RoutingMiddleware routing = new RoutingMiddleware();
-                routing.AddRoute<HealthController>("health");
-                routing.AddRoute<HealthController>("/health/<value>");
-                routing.AddRoute<ImageProcessingController>("process/<filter>/<coords>");
+                routing.AddRoute<HealthController>("health")
+                    .AddRoute<HealthController>("/health/<value>")
+                    .AddRoute<ImageProcessingController>("process/<filter>/<coords>");
 
                 server.AddMiddleware(routing);
                 server.Start("http://+:8080/");

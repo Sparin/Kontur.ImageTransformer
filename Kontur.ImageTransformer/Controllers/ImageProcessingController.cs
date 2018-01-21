@@ -13,14 +13,25 @@ using NLog;
 
 namespace Kontur.ImageTransformer.Controllers
 {
+    /// <summary>
+    /// Provides HTTP methods for image processing
+    /// </summary>
     public class ImageProcessingController : Controller
-    {
-        private static Logger logger = LogManager.GetCurrentClassLogger();
+    {       
+        /// <summary>
+        /// First 8 bytes of PNG every file
+        /// </summary>
         public static readonly byte[] PngSignature = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         private static GrayscaleStrategy GrayscaleStrategy = new GrayscaleStrategy();
         private static SepiaStrategy SepiaStrategy = new SepiaStrategy();
 
+        /// <summary>
+        /// Applies  filter on PNG image in body of HTTP request
+        /// </summary>
+        /// <param name="filter">Name of the filter</param>
+        /// <param name="coords">Cropping area of image</param>
         public void Post(string filter, string coords)
         {
             Bitmap bodyBitmap = null;

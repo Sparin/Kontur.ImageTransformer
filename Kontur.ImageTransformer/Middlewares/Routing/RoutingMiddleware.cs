@@ -14,6 +14,9 @@ using NLog;
 
 namespace Kontur.ImageTransformer.Middlewares.Routing
 {
+    /// <summary>
+    /// Provides routing subsystem for implementation MVC pattern
+    /// </summary>
     public class RoutingMiddleware : Middleware
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
@@ -22,6 +25,11 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
         Dictionary<string, Type> routes = new Dictionary<string, Type>();
         Dictionary<string, UriPart[]> contracts = new Dictionary<string, UriPart[]>();
 
+        /// <summary>
+        /// Handles the <see cref="HttpListenerContext"/> and commiting changes for request
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>Same context with changes after other pipelines</returns>
         public override async Task<HttpListenerContext> Handle(HttpListenerContext context)
         {
             var parts = GetUriParts(context.Request.RawUrl).ToArray();
@@ -51,6 +59,12 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             return await Next(context);
         }
 
+        /// <summary>
+        /// Adds route for handling by controller
+        /// </summary>
+        /// <typeparam name="T">Any class based on <see cref="Controller"/>, which will handle request on this pattern</typeparam>
+        /// <param name="pattern">Pattern of route</param>
+        /// <returns></returns>
         public RoutingMiddleware AddRoute<T>(string pattern) where T : Controller
         {
             var parts = Regex.Matches(pattern, UriPartsPattern)

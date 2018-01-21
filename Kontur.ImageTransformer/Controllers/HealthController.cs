@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Kontur.ImageTransformer.Controllers
 {
+#pragma warning disable CS1591 // Missing XML Comment for publicy visible type of member
     public class HealthController : Controller
     {
         public void Get()
@@ -46,4 +47,5 @@ namespace Kontur.ImageTransformer.Controllers
         }
 
     }
+#pragma warning restore CS1591 // Missing XML Comment for publicy visible type of member
 }

@@ -9,15 +9,35 @@ using System.Threading.Tasks;
 
 namespace Kontur.ImageTransformer.Renderer.Strategies
 {
+    /// <summary>
+    /// Provides sepia filter for images/renderer
+    /// </summary>
     public class SepiaStrategy : IRenderStrategy
     {
+        /// <summary>
+        /// Gets the pixel format of bitmap after processing bitmap
+        /// </summary>        
         public PixelFormat PixelFormat { get; } = PixelFormat.Format32bppArgb;
 
+
+        /// <summary>
+        /// Creates new cropped <see cref="Bitmap"/> with sepia filter
+        /// </summary>
+        /// <param name="bitmap">Source bitmap</param>
+        /// <param name="croppingArea">Crop region</param>
+        /// <returns>Cropped <see cref="Bitmap"/> with sepia filter</returns>
         public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea)
         {
             return await Process(bitmap, croppingArea, new CancellationToken());
         }
 
+        /// <summary>
+        /// Creates new cropped <see cref="Bitmap"/> with sepia filter
+        /// </summary>
+        /// <param name="bitmap">Source bitmap</param>
+        /// <param name="croppingArea">Crop region</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Cropped <see cref="Bitmap"/> with sepia filter</returns>
         public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea, CancellationToken cancellationToken)
         {
             return await Task.Run(() =>
@@ -65,7 +85,5 @@ namespace Kontur.ImageTransformer.Renderer.Strategies
                 return resultBitmap;
             });
         }
-
-
     }
 }

@@ -9,11 +9,20 @@ using System.Threading.Tasks;
 
 namespace Kontur.ImageTransformer.Renderer.Strategies
 {
+    /// <summary>
+    /// Provides threshold filter for images/renderer
+    /// </summary>
     public class ThresholdStrategy : IRenderStrategy
     {
+        /// <summary>
+        /// Gets the pixel format of bitmap after processing bitmap
+        /// </summary>       
         public PixelFormat PixelFormat { get; } = PixelFormat.Format32bppArgb;
 
         private int threshold = 0;
+        /// <summary>
+        /// Gets or sets threshold
+        /// </summary>
         public int Threshold
         {
             get { return threshold; }
@@ -25,19 +34,39 @@ namespace Kontur.ImageTransformer.Renderer.Strategies
                     throw new ArgumentOutOfRangeException("Threshold must be between 0 and 100");
             }
         }
-
+        
+        /// <summary>
+        /// Initialize new instance of the <see cref="ThresholdStrategy"/>
+        /// </summary>
         public ThresholdStrategy() : this(0) { }
 
+        /// <summary>
+        /// Initialize new instance of the <see cref="ThresholdStrategy"/> with <paramref name="threshold"/> value
+        /// </summary>
+        /// <param name="threshold">Threshold value</param>
         public ThresholdStrategy(int threshold)
         {
             Threshold = threshold;
         }
 
+        /// <summary>
+        /// Creates new cropped <see cref="Bitmap"/> with threshold filter
+        /// </summary>
+        /// <param name="bitmap">Source bitmap</param>
+        /// <param name="croppingArea">Crop region</param>
+        /// <returns>Cropped <see cref="Bitmap"/> with sepia filter</returns>
         public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea)
         {
             return await Process(bitmap, croppingArea, new CancellationToken());
         }
 
+        /// <summary>
+        /// Creates new cropped <see cref="Bitmap"/> with threshold filter
+        /// </summary>
+        /// <param name="bitmap">Source bitmap</param>
+        /// <param name="croppingArea">Crop region</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Cropped <see cref="Bitmap"/> with sepia filter</returns>
         public async Task<Bitmap> Process(Bitmap bitmap, Rectangle croppingArea, CancellationToken cancellationToken)
         {
             return await Task.Run(() =>
