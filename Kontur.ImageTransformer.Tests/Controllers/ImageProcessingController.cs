@@ -155,6 +155,67 @@ namespace Kontur.ImageTransformer.Tests.Controllers
             }
         }
 
+        [Theory(DisplayName = "Invalid Content-Length")]
+        [InlineData(101 * 1024)] //101 KB
+        [InlineData(0)]
+        [Trait("Controller", "ImageProcessing")]
+        public async void POST_InvalitContentLength_400(int length)
+        {
+            byte[] data = new byte[length];
+            using (var content = new ByteArrayContent(data))
+            {
+                var response = await restClient.PostAsync($"process/grayscale/0,0,2000,2000", content);
+                _output.WriteLine("POST request return a {0} status code. Is success status code: {1}", (int)response.StatusCode, response.IsSuccessStatusCode);
+                Assert.Equal(400, (int)response.StatusCode);
+                Assert.False(response.IsSuccessStatusCode);
+            }
+        }
+
+        [Fact(DisplayName = "Invalid PNG signature")]
+        [Trait("Controller", "ImageProcessing")]
+        public async void POST_InvalidPngSignature_400()
+        {
+            byte[] data = new byte[1024];
+            using (var content = new ByteArrayContent(data))
+            {
+                var response = await restClient.PostAsync($"process/grayscale/0,0,2000,2000", content);
+                _output.WriteLine("POST request return a {0} status code. Is success status code: {1}", (int)response.StatusCode, response.IsSuccessStatusCode);
+                Assert.Equal(400, (int)response.StatusCode);
+                Assert.False(response.IsSuccessStatusCode);
+            }
+        }
+
+        [Theory(DisplayName = "Invalid region of image")]
+        [InlineData(long.MinValue, 0, 0, 0)]
+        [InlineData(0, long.MinValue, 0, 0)]
+        [InlineData(0, 0, long.MinValue, 0)]
+        [InlineData(0, 0, 0, long.MinValue)]
+        [Trait("Controller", "ImageProcessing")]
+        public async void POST_InvalidCropArea_400(long x, long y, long width, long height)
+        {
+            using (var content = new StreamContent(File.OpenRead(DEFAULT_IMAGE)))
+            {
+                var response = await restClient.PostAsync($"process/grayscale/{x},{y},{width},{height}", content);
+                _output.WriteLine("POST request return a {0} status code. Is success status code: {1}", (int)response.StatusCode, response.IsSuccessStatusCode);
+                Assert.Equal(400, (int)response.StatusCode);
+                Assert.False(response.IsSuccessStatusCode);
+            }
+        }
+
+        [Fact(DisplayName = "Corrupted PNG file")]
+        [Trait("Controller", "ImageProcessing")]
+        public async void POST_CorruptedPngFile_400()
+        {
+            byte[] data = new byte[9] { 137, 80, 78, 71, 13, 10, 26, 10, 0 };
+            using (var content = new ByteArrayContent(data))
+            {
+                var response = await restClient.PostAsync($"process/grayscale/0,0,2000,2000", content);
+                _output.WriteLine("POST request return a {0} status code. Is success status code: {1}", (int)response.StatusCode, response.IsSuccessStatusCode);
+                Assert.Equal(400, (int)response.StatusCode);
+                Assert.False(response.IsSuccessStatusCode);
+            }
+        }
+
         public static Color ApplySepiaFilter(Color color)
         {
             float r = color.R * 0.393f + color.G * 0.769f + color.B * 0.189f;
