@@ -9,16 +9,29 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
+using NLog;
 
 namespace Kontur.ImageTransformer.Controllers
 {
+    /// <summary>
+    /// Provides HTTP methods for image processing
+    /// </summary>
     public class ImageProcessingController : Controller
-    {
+    {       
+        /// <summary>
+        /// First 8 bytes of PNG every file
+        /// </summary>
         public static readonly byte[] PngSignature = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         private static GrayscaleStrategy GrayscaleStrategy = new GrayscaleStrategy();
         private static SepiaStrategy SepiaStrategy = new SepiaStrategy();
 
+        /// <summary>
+        /// Applies  filter on PNG image in body of HTTP request
+        /// </summary>
+        /// <param name="filter">Name of the filter</param>
+        /// <param name="coords">Cropping area of image</param>
         public void Post(string filter, string coords)
         {
             Bitmap bodyBitmap = null;
@@ -26,8 +39,8 @@ namespace Kontur.ImageTransformer.Controllers
             MemoryStream stream = null;
             try
             {
-
-                if (Context.Request.ContentLength64 > 102400)
+                IRenderStrategy filterStrategy = GetFilter(filter);
+                if (Context.Request.ContentLength64 > 102400 || Context.Request.ContentLength64 <= 8 || filterStrategy == null)
                 {
                     Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     return;
@@ -46,15 +59,15 @@ namespace Kontur.ImageTransformer.Controllers
 
                 Renderer.Renderer renderer = new Renderer.Renderer();
                 bodyBitmap = new Bitmap(stream);
-                Rectangle cropArea = ConvertToRectangle(coords);
+                Rectangle cropArea = ConvertToRectangle(coords);                
                 cropArea.Intersect(new Rectangle(0, 0, bodyBitmap.Width, bodyBitmap.Height));
+                logger.Trace($"#{Context.Request.RequestTraceIdentifier} Rectangle of target bitmap: {cropArea.X}, {cropArea.Y}, {cropArea.Width}, {cropArea.Height}");
+
                 if (cropArea.Width == 0 || cropArea.Height == 0)
                 {
                     Context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                     return;
                 }
-
-                IRenderStrategy filterStrategy = GetFilter(filter);
 
                 result = renderer.RenderBitmap(bodyBitmap, cropArea, filterStrategy).Result;
 
@@ -63,14 +76,19 @@ namespace Kontur.ImageTransformer.Controllers
                 Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
 
             }
+            catch (OverflowException e) when (e.Message == "Value was either too large or too small for an Int32.")
+            {
+                Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
             catch (ArgumentException)
             {
                 Context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw ex;
             }
             finally
             {
@@ -111,13 +129,12 @@ namespace Kontur.ImageTransformer.Controllers
                     break;
 
                 default:
-                    if (Regex.IsMatch(filter, @"threshold\(\d{1,3}\)"))
+                    if (Regex.IsMatch(filter, @"\Athreshold\(\d{1,3}\)\z"))
                     {
                         var threshold = Convert.ToInt32(Regex.Match(filter, @"\d{1,3}").Value);
-                        filterStrategy = new ThresholdStrategy(threshold);
+                        if (threshold >= 0 && threshold <= 100)
+                            filterStrategy = new ThresholdStrategy(threshold);
                     }
-                    else
-                        throw new ArgumentException("Filter is not found");
                     break;
             }
 

@@ -10,16 +10,26 @@ using Kontur.ImageTransformer.Middlewares.Routing.Models;
 using Kontur.ImageTransformer.Middlewares.Routing.Enums;
 using Kontur.ImageTransformer.Controllers;
 using System.Reflection;
+using NLog;
 
 namespace Kontur.ImageTransformer.Middlewares.Routing
 {
+    /// <summary>
+    /// Provides routing subsystem for implementation MVC pattern
+    /// </summary>
     public class RoutingMiddleware : Middleware
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         internal const string UriPartsPattern = @"<{0,1}[\w\d\-%.(),_~]{1,}>{0,1}";
 
         Dictionary<string, Type> routes = new Dictionary<string, Type>();
         Dictionary<string, UriPart[]> contracts = new Dictionary<string, UriPart[]>();
 
+        /// <summary>
+        /// Handles the <see cref="HttpListenerContext"/> and commiting changes for request
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>Same context with changes after other pipelines</returns>
         public override async Task<HttpListenerContext> Handle(HttpListenerContext context)
         {
             var parts = GetUriParts(context.Request.RawUrl).ToArray();
@@ -29,7 +39,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             foreach (var key in keys)
             {
                 var controllerType = routes[key];
-                
+
                 var controller = Activator.CreateInstance(controllerType);
                 var contextField = typeof(Controller).GetField("<Context>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
                 contextField.SetValue(controller, context);
@@ -39,10 +49,8 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
                     notFound = false;
                 else
                     continue;
+                logger.Trace($"{method.Name} of {controllerType.Name} handling request #{context.Request.RequestTraceIdentifier}");
                 method.Invoke(controller, GetParameters(method, context.Request.RawUrl, contracts[key]));
-
-                //byte[] buffer = Encoding.Default.GetBytes(controllerType.FullName + "\r\n" + context.Request.RawUrl);
-                //context.Response.OutputStream.Write(buffer, 0, buffer.Length);
             }
 
             if (keys.Length == 0 || notFound)
@@ -51,6 +59,12 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             return await Next(context);
         }
 
+        /// <summary>
+        /// Adds route for handling by controller
+        /// </summary>
+        /// <typeparam name="T">Any class based on <see cref="Controller"/>, which will handle request on this pattern</typeparam>
+        /// <param name="pattern">Pattern of route</param>
+        /// <returns></returns>
         public RoutingMiddleware AddRoute<T>(string pattern) where T : Controller
         {
             var parts = Regex.Matches(pattern, UriPartsPattern)
@@ -63,6 +77,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             routes.Add(route, typeof(T));
             contracts.Add(route, uriParts);
 
+            logger.Trace($"Route {pattern} added for providing to {typeof(T).Name}");
             return this;
         }
 
@@ -83,7 +98,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
                         throw new ArgumentException("Unsupported type part of URI");
 
                 }
-            
+
             stringBuilder.Append("/{0,1}");
             stringBuilder.Append(@"\z");
 
@@ -132,7 +147,7 @@ namespace Kontur.ImageTransformer.Middlewares.Routing
             object[] result = new object[parameters.Length];
             var parts = GetUriParts(url).ToArray();
 
-            for (int i = 0; i < result.Length && i< contractParameters.Length; i++)
+            for (int i = 0; i < result.Length && i < contractParameters.Length; i++)
             {
                 var index = contract.ToList().IndexOf(contractParameters[i]);
                 result[i] = parts[index];

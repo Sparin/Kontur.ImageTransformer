@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.ImageTransformer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.ImageTransformer.Renderer", "Kontur.ImageTransformer.Renderer\Kontur.ImageTransformer.Renderer.csproj", "{625D7C11-99AF-4BF7-8328-404BFDCA175B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.ImageTransformer.Tests", "Kontur.ImageTransformer.Tests\Kontur.ImageTransformer.Tests.csproj", "{3AA7E176-632E-4A71-A0F8-579775C6C061}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{625D7C11-99AF-4BF7-8328-404BFDCA175B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AA7E176-632E-4A71-A0F8-579775C6C061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AA7E176-632E-4A71-A0F8-579775C6C061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AA7E176-632E-4A71-A0F8-579775C6C061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AA7E176-632E-4A71-A0F8-579775C6C061}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
