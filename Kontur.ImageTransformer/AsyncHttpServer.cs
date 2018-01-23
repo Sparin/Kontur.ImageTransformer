@@ -100,6 +100,10 @@ namespace Kontur.ImageTransformer
                 {
                     return;
                 }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Unexpected error occurred");
+                }
             }
         }
 
@@ -126,10 +130,6 @@ namespace Kontur.ImageTransformer
             {
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 logger.Error(ex, "Unexpected error occurred");
-#if DEBUG
-                byte[] buffer = Encoding.Default.GetBytes($"{ex.Message}\r\n{ex.StackTrace}");
-                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-#endif
             }
 
             logger.Info($"#{context.Request.RequestTraceIdentifier} {context.Request.HttpMethod} {context.Request.Url} responsed with code {context.Response.StatusCode}");
