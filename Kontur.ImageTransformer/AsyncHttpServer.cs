@@ -15,7 +15,7 @@ namespace Kontur.ImageTransformer
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25, MaxQueueLength = 100 });
+        private readonly SmartThreadPool threadPool = new SmartThreadPool(new STPStartInfo() { MaxWorkerThreads = 25, MaxQueueLength = 50});
         private readonly HttpListener listener;
 
         private Thread listenerThread;
