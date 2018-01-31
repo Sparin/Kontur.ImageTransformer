@@ -73,6 +73,8 @@ namespace Kontur.ImageTransformer.Controllers
 
                 stream.Dispose(); stream = new MemoryStream();
                 result.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                Context.Response.AddHeader("Content-Type", "application/octet-stream");
+                Context.Response.ContentLength64 = stream.Length;
                 Context.Response.OutputStream.Write(stream.ToArray(), 0, (int)stream.Length);
 
             }
