@@ -57,24 +57,24 @@ namespace Kontur.ImageTransformer.Renderer.Strategies
 
                         //Blue
                         float buffer = r * 0.272f + g * 0.534f + b * 0.131f;
-                        if (buffer > 255)
+                        if (buffer >= 255)
                             dataPointer[i] = 255;
                         else
-                            dataPointer[i] = Convert.ToByte(buffer);
+                            dataPointer[i] = (byte)buffer;
 
                         //Green
                         buffer = r * 0.349f + g * 0.686f + b * 0.168f;
-                        if (buffer > 255)
+                        if (buffer >= 255)
                             dataPointer[i + 1] = 255;
                         else
-                            dataPointer[i + 1] = Convert.ToByte(buffer);
+                            dataPointer[i + 1] = (byte)buffer;
 
                         //Red
                         buffer = r * 0.393f + g * 0.769f + b * 0.189f;
-                        if (buffer > 255)
+                        if (buffer >= 255)
                             dataPointer[i + 2] = 255;
                         else
-                            dataPointer[i + 2] = Convert.ToByte(buffer);
+                            dataPointer[i + 2] = (byte)buffer;
 
                         cancellationToken.ThrowIfCancellationRequested();
                     }
