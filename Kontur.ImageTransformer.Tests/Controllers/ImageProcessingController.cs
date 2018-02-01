@@ -225,7 +225,7 @@ namespace Kontur.ImageTransformer.Tests.Controllers
             float b = color.R * 0.272f + color.G * 0.534f + color.B * 0.131f;
             b = b > 255 ? 255 : b;
 
-            return Color.FromArgb(color.A, Convert.ToInt32(r), Convert.ToInt32(g), Convert.ToInt32(b));
+            return Color.FromArgb(color.A, (byte)r, (byte)g, (byte)b);
         }
 
         public static Color ApplyGrayscaleFilter(Color color)
